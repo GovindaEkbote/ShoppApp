@@ -13,8 +13,13 @@ app.use("/api/v1",product)
 const user = require('./routes/userRoutes')
 app.use('/api/v1',user)
 
-// MiddleWare For error
+const country = require('./routes/countryRoutes')
+app.use("/api/v1",country)
 
+const shippAddress = require('./routes/shippingRoutes')
+app.use("/api/v1",shippAddress)
+
+// MiddleWare For error
 app.use(errorMiddleware)
 
 
