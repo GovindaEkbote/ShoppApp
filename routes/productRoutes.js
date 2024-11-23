@@ -9,6 +9,7 @@ const {
   createProductReview,
   getProductReviews,
   deleteReviews,
+  productLike,
 } = require("../controllers/productController");
 
 const router = express.Router();
@@ -28,5 +29,7 @@ router.route("/put/review").put(isAuthenticatedUser, createProductReview);
 
 router.route("/get/reviews").get(getProductReviews);
 router.route("/delete/review").delete(isAuthenticatedUser, deleteReviews);
+
+router.route("/post/like").post(isAuthenticatedUser, productLike);
 
 module.exports = router;

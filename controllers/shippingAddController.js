@@ -63,6 +63,25 @@ exports.updateAddress = tryCatchError(async (req, res, next) => {
   });
 });
 
+// get all users Address..
+exports.getAllAddress = tryCatchError(async (req, res, next) => {
+  const address = await shippingAddress
+    .find()
+    // .populate("user", "id name email")
+    .populate("country", "name");
+  if (!address || address.length === 0) {
+    return res.status(404).json({
+      success: false,
+      message: "No shipping addresses found",
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    address,
+  });
+});
+
 // Get Address By ID Not Really required..
 // exports.getAddressById = tryCatchError(async (req, res, next) => {
 //   const address = await shippingAddress.findById(req.params.id);
@@ -71,6 +90,5 @@ exports.updateAddress = tryCatchError(async (req, res, next) => {
 //     address,
 //   });
 // });
-
 
 // Delete Address if Required...

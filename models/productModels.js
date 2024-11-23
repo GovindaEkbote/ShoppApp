@@ -55,27 +55,27 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
- reviews: [
-  {
-    user: {
-      type: mongoose.Schema.ObjectId,
-      ref: "User",
-      required: true,
+  reviews: [
+    {
+      user: {
+        type: mongoose.Schema.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      name: {
+        type: String,
+        required: true,
+      },
+      rating: {
+        type: Number,
+        required: true,
+      },
+      comment: {
+        type: String,
+        required: true,
+      },
     },
-    name: {
-      type: String,
-      required: true,
-    },
-    rating: {
-      type: Number,
-      required: true,
-    },
-    comment: {
-      type: String,
-      required: true,
-    },
-  },
-],
+  ],
 
   images: [
     {
@@ -98,7 +98,7 @@ const productSchema = new mongoose.Schema({
     required: [true, "Please Enter Product Stock"],
     default: 1,
   },
-  // likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // Reference to User model
+  likes: [{ type: mongoose.Schema.ObjectId, ref: "User" }], // Reference to User model
   likeCount: { type: Number, default: 0 },
   user: {
     type: mongoose.Schema.ObjectId,
