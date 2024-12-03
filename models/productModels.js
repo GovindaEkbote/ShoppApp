@@ -35,7 +35,7 @@ const productSchema = new mongoose.Schema({
   deliveryOptions: {
     standard: {
       time: { type: String, required: true }, // e.g., "5-7 days"
-      price: { type: Number, required: true }, // e.g., 3.00
+      price: { type: Number, required: true }, // e.g., 00
     },
     express: {
       time: { type: String, required: true }, // e.g., "1-2 days"

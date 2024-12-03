@@ -59,7 +59,7 @@ exports.logout = tryCatchError(async (req, res, next) => {
   });
 });
 
-// Forgot Password..
+// Forgot Password Email varification..
 exports.forgotPassword = tryCatchError(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
   if (!user) {

@@ -7,7 +7,7 @@ const Country = require("../models/countryModels");
 exports.addShippingAddress = tryCatchError(async (req, res, next) => {
   const { countryId, address, townCity, postcode, phoneNumber } = req.body;
   const user = req.user._id;
-
+  
   if (!address || !townCity || !postcode || !phoneNumber || !countryId) {
     return next(new ErrorHandler("All fields are required", 404));
   }

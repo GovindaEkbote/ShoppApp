@@ -9,7 +9,7 @@ const { type } = require("os");
 const userSchema = new mongoose.Schema({
   name:{
     type:String,
-    required:true
+    // required:true
   },
   email: {
     type: String,
