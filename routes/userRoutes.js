@@ -12,6 +12,8 @@ const {
   getUser,
   updateUserRole,
   deleteUser,
+  forgotPasswordOtp,
+  resetPasswordWithOtp,
 } = require("../controllers/userController");
 const { isAuthenticatedUser, authorizeRoles } = require("../middleware/Autho");
 
@@ -44,4 +46,13 @@ router
 router
   .route("/delete/admin/deleteuser/:id")
   .delete(isAuthenticatedUser, authorizeRoles("admin"), deleteUser);
+
+router
+  .route("/post/password/forgot-otp")
+  .post(isAuthenticatedUser, forgotPasswordOtp);
+
+router
+  .route("/post/password/reset-otp")
+  .post(isAuthenticatedUser, resetPasswordWithOtp);
+
 module.exports = router;

@@ -137,6 +137,75 @@ exports.resetPassword = tryCatchError(async (req, res, next) => {
   sendToken(user, 200, res);
 });
 
+// Forgot Password Email with OPT verification  ..
+exports.forgotPasswordOtp = tryCatchError(async (req, res, next) => {
+  const user = await User.findOne({ email: req.body.email });
+
+  if (!user) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  // Generate a random OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  // Store OTP in the user schema (you can store it temporarily in a separate field)
+  user.resetPasswordToken = otp;
+  user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes expiration
+  await user.save({ validateBeforeSave: false });
+
+  const message = `Your OTP for password reset is: ${otp}. This OTP will expire in 10 minutes.`;
+
+  try {
+    // Send OTP to user via email
+    await sendEmail({
+      email: user.email,
+      subject: `Password Reset OTP`,
+      message,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `OTP sent to ${user.email} successfully.`,
+    });
+  } catch (error) {
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save({ validateBeforeSave: false });
+    return next(new ErrorHandler("Email could not be sent", 500));
+  }
+});
+
+// Reset Password using OTP
+exports.resetPasswordWithOtp = tryCatchError(async (req, res, next) => {
+  const { otp, newPassword, confirmPassword } = req.body;
+
+  // Find user by OTP
+  const user = await User.findOne({
+    resetPasswordToken: otp,
+    resetPasswordExpire: { $gt: Date.now() }, // Check if OTP is still valid
+  });
+
+  if (!user) {
+    return next(new ErrorHandler("Invalid OTP or OTP has expired", 400));
+  }
+
+  // Check if newPassword and confirmPassword match
+  if (newPassword !== confirmPassword) {
+    return next(new ErrorHandler("Passwords do not match", 400));
+  }
+
+  // Update the password
+  user.password = newPassword;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+
+  await user.save();
+
+  // Send token response after successful password reset
+  sendToken(user, 200, res);
+});
+
+
 // Get User Details
 exports.getUserDetails = tryCatchError(async (req, res, next) => {
   const user = await User.findById(req.user.id);
