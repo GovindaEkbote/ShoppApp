@@ -205,7 +205,6 @@ exports.resetPasswordWithOtp = tryCatchError(async (req, res, next) => {
   sendToken(user, 200, res);
 });
 
-
 // Get User Details
 exports.getUserDetails = tryCatchError(async (req, res, next) => {
   const user = await User.findById(req.user.id);

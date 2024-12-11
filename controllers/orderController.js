@@ -15,6 +15,19 @@ exports.newOrder = tryCatchError(async (req, res, next) => {
     return next(new ErrorHandler("Order items are required", 400));
   }
 
+  // Fetch categories for each order item
+  const enrichedOrderItems = await Promise.all(
+    orderItems.map(async (item) => {
+      const product = await Product.findById(item.product);
+      if (!product) throw new ErrorHandler("Product not found", 404);
+
+      return {
+        ...item,
+        category: product.category, // Assuming `category` exists in the Product model
+      };
+    })
+  );
+
   // Validate shippingInfo
   const shippingAddress = await ShippingAddress.findById(shippingInfo);
   if (!shippingAddress) {
@@ -244,11 +257,96 @@ exports.getIncomeStatistics = tryCatchError(async (req, res, next) => {
   res.status(200).json({
     success: true,
     income: {
-      yearlyIncome: yearlyIncome[0] || { totalIncome: 0, averageIncome: 0, orderCount: 0 },
-      monthlyIncome: monthlyIncome[0] || { totalIncome: 0, averageIncome: 0, orderCount: 0 },
-      dailyIncome: dailyIncome[0] || { totalIncome: 0, averageIncome: 0, orderCount: 0 },
+      yearlyIncome: yearlyIncome[0] || {
+        totalIncome: 0,
+        averageIncome: 0,
+        orderCount: 0,
+      },
+      monthlyIncome: monthlyIncome[0] || {
+        totalIncome: 0,
+        averageIncome: 0,
+        orderCount: 0,
+      },
+      dailyIncome: dailyIncome[0] || {
+        totalIncome: 0,
+        averageIncome: 0,
+        orderCount: 0,
+      },
     },
   });
 });
 
-// Voucher api
+//  Fetch Order History by Categories (MyActivity)..
+exports.getOrderHistoryByCategory = tryCatchError(async (req, res, next) => {
+  const { year, month } = req.query;
+
+  if (!year || !month) {
+    return next(
+      new ErrorHandler(
+        "Year and month are required to fetch order history",
+        400
+      )
+    );
+  }
+
+  // Convert month to 0-indexed (i.e., January is 0, December is 11)
+  const startDate = new Date(year, month - 1, 1); // Start of the month
+  const endDate = new Date(year, month, 0); // End of the month
+
+  // Query orders for the selected month and year
+  const orders = await Order.find({
+    user: req.user._id,
+    createdAt: {
+      $gte: startDate,
+      $lt: endDate,
+    },
+  });
+
+  if (!orders.length) {
+    return res
+      .status(404)
+      .json({ message: `No orders found for ${month}/${year}` });
+  }
+
+  const categorySummary = {};
+  let totalAmount = 0;
+  let totalOrders = 0;
+  let totalProcessingOrders = 0;
+
+  // Group items by category
+  orders.forEach((order) => {
+    totalOrders++;
+    if (order.orderStatus === "Processing") {
+      totalProcessingOrders++;
+    }
+
+    order.orderItems.forEach((item) => {
+      const { category, price, quantity } = item;
+
+      if (!categorySummary[category]) {
+        categorySummary[category] = {
+          totalAmount: 0,
+          totalCount: 0,
+        };
+      }
+
+      categorySummary[category].totalAmount += price * quantity;
+      categorySummary[category].totalCount += quantity;
+    });
+
+    // Accumulate total price
+    totalAmount += order.totalPrice;
+  });
+
+  res.status(200).json({
+    success: true,
+    categories: categorySummary,
+    orderStatusSummary: {
+      Delivered: orders.filter((order) => order.orderStatus === "Delivered")
+        .length,
+      Processing: totalProcessingOrders,
+      totalOrders: totalOrders,
+    },
+    totalPrice: totalAmount,
+  });
+});

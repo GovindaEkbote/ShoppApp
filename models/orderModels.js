@@ -29,6 +29,10 @@ const orderSchema = new mongoose.Schema({
         ref: "Product", // Reference to the Product model
         required: true,
       },
+      category: {
+      type: String,
+      // required: true, // Example: "Clothing", "Shoes", etc.
+    },
     },
   ],
   user: {

@@ -8,6 +8,7 @@ const {
   updateOrder,
   deleteOrder,
   getIncomeStatistics,
+  getOrderHistoryByCategory,
 } = require("../controllers/orderController");
 
 const router = express.Router();
@@ -27,5 +28,12 @@ router
   .route("/delete/order/:id")
   .delete(isAuthenticatedUser, authorizeRoles("admin"), deleteOrder);
 
-router.route("/get/income").get(isAuthenticatedUser, authorizeRoles("admin"),getIncomeStatistics)
+router
+  .route("/get/income")
+  .get(isAuthenticatedUser, authorizeRoles("admin"), getIncomeStatistics);
+
+router
+  .route("/get/orders/history/categories")
+  .get(isAuthenticatedUser, getOrderHistoryByCategory);
+
 module.exports = router;

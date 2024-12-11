@@ -5,6 +5,7 @@ const {
   getAllLanguages,
   getLanguage,
   deleteLanguage,
+  selectLanguage,
 } = require("../controllers/languageController");
 
 const router = express.Router();
@@ -13,6 +14,7 @@ router.route("/post/add").post(isAuthenticatedUser, authorizeRoles("admin"),addL
 router.route("/get/languages").get(isAuthenticatedUser, getAllLanguages);
 router.route("/get/language/:id").get(isAuthenticatedUser,getLanguage)
 router.route("/delete/language/:id").delete(isAuthenticatedUser, authorizeRoles("admin"),deleteLanguage)
+
 
 
 module.exports = router;
