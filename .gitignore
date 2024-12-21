@@ -1,0 +1,7 @@
+.routes
+.WorkInProgress
+.env
+
+git rm --cached .routes
+git rm --cached .WorkInProgress
+git rm --cached .env
