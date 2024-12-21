@@ -1,5 +1,9 @@
+# Ignore specific files
 .routes
 .WorkInProgress
 .env
+config.env
 
-
+# Ignore specific folders
+/routes/
+/WorkInProgress/
