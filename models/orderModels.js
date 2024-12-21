@@ -30,9 +30,9 @@ const orderSchema = new mongoose.Schema({
         required: true,
       },
       category: {
-      type: String,
-      // required: true, // Example: "Clothing", "Shoes", etc.
-    },
+        type: String,
+        // required: true, // Example: "Clothing", "Shoes", etc.
+      },
     },
   ],
   user: {
@@ -79,6 +79,15 @@ const orderSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
+  },
+  voucher: {
+    type: mongoose.Schema.ObjectId,
+    ref: "Voucher",
+    default: null,
+  },
+  discountAmount: {
+    type: Number,
+    default: 0,
   },
 });
 

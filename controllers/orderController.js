@@ -4,6 +4,8 @@ const Product = require("../models/productModels");
 const ShippingAddress = require("../models/shippingAddModels");
 const ErrorHandler = require("../utils/ErrorHandling");
 const tryCatchError = require("../middleware/tryCatch");
+const Voucher = require("../models/voucherModels")
+
 
 // Create New Order ..
 exports.newOrder = tryCatchError(async (req, res, next) => {
@@ -89,35 +91,38 @@ exports.myOrders = tryCatchError(async (req, res, next) => {
   // Query the orders by user ID
   const orders = await Order.find({ user: req.user._id });
 
+  const totalAmount = orders.reduce((acc, order) => acc + order.totalPrice, 0);
+
   // Return the orders
-  res.status(200).json({
-    success: true,
-    orders,
-  });
-});
-
-// get All orders -- Admin
-exports.getAllOrders = tryCatchError(async (req, res, next) => {
-  const orders = await Order.find().populate({
-    path: "shippingInfo", // Populating the shippingInfo field to fetch complete address
-    populate: {
-      path: "country", // Populating the country field within the shippingInfo
-      select: "name code", // You can choose what fields to select from the Country model (e.g., name, code)
-    },
-  });
-  let totalAmount = 0;
-
-  // Calculate total amount by summing up the totalPrice of each order
-  orders.forEach((order) => {
-    totalAmount += order.totalPrice;
-  });
-
   res.status(200).json({
     success: true,
     totalAmount,
     orders,
   });
 });
+
+// // get All orders -- Admin
+// exports.getAllOrders = tryCatchError(async (req, res, next) => {
+//   const orders = await Order.find().populate({
+//     path: "shippingInfo", // Populating the shippingInfo field to fetch complete address
+//     populate: {
+//       path: "country", // Populating the country field within the shippingInfo
+//       select: "name code", // You can choose what fields to select from the Country model (e.g., name, code)
+//     },
+//   });
+//   let totalAmount = 0;
+
+//   // Calculate total amount by summing up the totalPrice of each order
+//   orders.forEach((order) => {
+//     totalAmount += order.totalPrice;
+//   });
+
+//   res.status(200).json({
+//     success: true,
+//     totalAmount,
+//     orders,
+//   });
+// });
 
 // update Order Status -- Admin
 exports.updateOrder = tryCatchError(async (req, res, next) => {
@@ -350,3 +355,78 @@ exports.getOrderHistoryByCategory = tryCatchError(async (req, res, next) => {
     totalPrice: totalAmount,
   });
 });
+
+
+// apply Voucher..
+exports.applyVoucher = tryCatchError(async (req, res, next) => {
+  // Step 1: Fetch user's past orders
+  const orders = await Order.find({ user: req.user._id });
+
+  const totalAmount = orders.reduce((acc, order) => acc + order.totalPrice, 0);
+
+  const { voucherId } = req.body; // Input from frontend
+
+  // Step 2: Validate voucher existence
+  const voucher = await Voucher.findById(voucherId);
+
+  if (!voucher) {
+    return next(new ErrorHandler("Voucher not found", 404));
+  }
+
+  // Step 3: Check voucher validity
+  if (voucher.status !== "Available" || voucher.expiryDate < Date.now()) {
+    return next(new ErrorHandler("Voucher is expired or unavailable", 400));
+  }
+
+  // Step 4: Calculate discount
+  const discountAmount = (totalAmount * voucher.discount) / 100; // Voucher discount percentage
+  const finalAmount = totalAmount - discountAmount;
+
+  // Step 5: Update orders with discount
+  await Promise.all(
+    orders.map(async (order) => {
+      order.discountAmount = (order.totalPrice / totalAmount) * discountAmount; // Pro-rate discount per order
+      order.voucher = voucher._id; // Save the applied voucher ID
+      await order.save(); // Save updated order
+    })
+  );
+
+  // Step 6: Return response
+  res.status(200).json({
+    success: true,
+    message: "Voucher applied successfully",
+    totalAmount,
+    discountAmount,
+    finalAmount,
+  });
+});
+
+// get All orders and total income -- Admin..
+exports.getAllOrders = tryCatchError(async (req, res, next) => {
+  const orders = await Order.find().populate({
+    path: "shippingInfo",
+    populate: {
+      path: "country",
+      select: "name code",
+    },
+  });
+
+  let grossAmount = 0; // Total amount before discounts
+  let netAmount = 0;   // Total amount after discounts
+
+  orders.forEach((order) => {
+    const orderTotal = order.itemPrice + order.shippingPrice; // Order total before discount
+    const discount = order.discountAmount || 0;              // Ensure discountAmount is accounted for
+
+    grossAmount += orderTotal;          // Add to gross total
+    netAmount += (orderTotal - discount); // Add discounted total to netAmount
+  });
+
+  res.status(200).json({
+    success: true,
+    grossAmount, // Total amount before discounts
+    netAmount,   // Total amount after discounts
+    orders,
+  });
+});
+

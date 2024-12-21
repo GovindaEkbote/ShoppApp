@@ -9,6 +9,7 @@ const {
   deleteOrder,
   getIncomeStatistics,
   getOrderHistoryByCategory,
+  applyVoucher,
 } = require("../controllers/orderController");
 
 const router = express.Router();
@@ -35,5 +36,7 @@ router
 router
   .route("/get/orders/history/categories")
   .get(isAuthenticatedUser, getOrderHistoryByCategory);
+
+router.route("/post/voucher/apply").post(isAuthenticatedUser, applyVoucher);
 
 module.exports = router;

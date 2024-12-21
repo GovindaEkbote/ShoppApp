@@ -27,6 +27,9 @@ app.use("/api/v1",card)
 const language = require("./routes/languageRoutes");
 app.use("/api/v1",language)
 
+const voucher = require("./routes/voucherRoutes");
+app.use("/api/v1", voucher)
+
 // MiddleWare For error
 app.use(errorMiddleware);
 
